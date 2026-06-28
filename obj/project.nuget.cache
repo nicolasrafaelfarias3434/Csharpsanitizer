@@ -1,0 +1,15 @@
+{
+  "version": 2,
+  "dgSpecHash": "Vy5mcbJ2hcA=",
+  "success": true,
+  "projectFilePath": "C:\\Users\\nico3\\source\\repos\\Csharpsanitizer\\Csharpsanitizer.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\nico3\\.nuget\\packages\\microsoft.codeanalysis.analyzers\\5.3.0-2.25625.1\\microsoft.codeanalysis.analyzers.5.3.0-2.25625.1.nupkg.sha512",
+    "C:\\Users\\nico3\\.nuget\\packages\\microsoft.codeanalysis.common\\5.3.0\\microsoft.codeanalysis.common.5.3.0.nupkg.sha512",
+    "C:\\Users\\nico3\\.nuget\\packages\\microsoft.codeanalysis.csharp\\5.3.0\\microsoft.codeanalysis.csharp.5.3.0.nupkg.sha512",
+    "C:\\Users\\nico3\\.nuget\\packages\\microsoft.visualstudio.azure.containers.tools.targets\\1.23.0\\microsoft.visualstudio.azure.containers.tools.targets.1.23.0.nupkg.sha512",
+    "C:\\Users\\nico3\\.nuget\\packages\\system.collections.immutable\\9.0.0\\system.collections.immutable.9.0.0.nupkg.sha512",
+    "C:\\Users\\nico3\\.nuget\\packages\\system.reflection.metadata\\9.0.0\\system.reflection.metadata.9.0.0.nupkg.sha512"
+  ],
+  "logs": []
+}
