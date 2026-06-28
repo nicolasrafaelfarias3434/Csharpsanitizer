@@ -31,5 +31,30 @@ namespace Csharpsanitizer.CodeSanitizer
             var lines = _originalToPlaceholder.Select(kv => $"{kv.Value} => {kv.Key}");
             File.WriteAllLines(path, lines);
         }
+
+        /// <summary>
+        /// Carga un mapa previamente guardado con SaveTo, devolviendo el diccionario
+        /// inverso (placeholder -> valor original) listo para restaurar un texto.
+        /// </summary>
+        public static Dictionary<string, string> LoadPlaceholderToOriginal(string path)
+        {
+            var result = new Dictionary<string, string>();
+
+            foreach (var line in File.ReadAllLines(path))
+            {
+                if (string.IsNullOrWhiteSpace(line))
+                    continue;
+
+                var separatorIndex = line.IndexOf(" => ", StringComparison.Ordinal);
+                if (separatorIndex < 0)
+                    continue;
+
+                var placeholder = line[..separatorIndex];
+                var original = line[(separatorIndex + 4)..];
+                result[placeholder] = original;
+            }
+
+            return result;
+        }
     }
 }
