@@ -9,19 +9,19 @@ namespace CodeSanitizer
     ///   Sanitize (hides sensitive values):
     ///     dotnet run -- sanitize --input ./MyProject
     ///     dotnet run -- --input ./MyFile.cs                 (sanitize is the default command)
-    ///     (--output is optional; by default uses "<input>_sanitized" next to the input)
+    ///     (--output is optional; defaults to "<input>_sanitized" next to the input)
     ///
-    ///   Restore (reverts placeholders to original values, e.g., on the
-    ///   AI response you pasted into a file):
-    ///     dotnet run -- restore --input ./MyFile.cs --map ./MyProject_sanitized/_replacement-map.txt
-    ///     (--output is optional; by default uses "<input>_restored" next to the input)
+    ///   Restore (reverts placeholders back to original values, e.g. on the
+    ///   AI's response that you pasted into a file):
+    ///     dotnet run -- restore --input ./ai-response.cs --map ./MyProject_sanitized/_replacement-map.txt
+    ///     (--output is optional; defaults to "<input>_restored" next to the input)
     ///
-    /// The replacement map is stored in "<output>/_replacement-map.txt" (DO NOT upload this file anywhere,
-    /// it is only for you to reconstruct names if you need to interpret the AI's response).
+    /// The replacement map is saved at "<output>/_replacement-map.txt" (NEVER upload it anywhere,
+    /// it's only so you can reconstruct names if you need to interpret the AI's response).
     /// </summary>
     public static class Program
     {
-        // Extensions that we treat as plain text + regex rules.
+        // Extensions treated as plain text + regex rules.
         private static readonly HashSet<string> TextExtensions = new(StringComparer.OrdinalIgnoreCase)
     {
         ".json", ".config", ".xml", ".yml", ".yaml", ".txt", ".md", ".env", ".ini"
@@ -35,8 +35,8 @@ namespace CodeSanitizer
                 return 1;
             }
 
-            // The first argument can be the command ("sanitize"/"restore"). If it's not,
-            // (e.g., it starts with "--"), we assume "sanitize" to avoid breaking the previous usage.
+            // The first argument can be the command ("sanitize"/"restore"). If it isn't
+            // (e.g. it starts with "--"), "sanitize" is assumed to keep prior usage working.
             var command = args[0].StartsWith("-") ? "sanitize" : args[0].ToLowerInvariant();
             var rest = args[0].StartsWith("-") ? args : args.Skip(1).ToArray();
 
@@ -68,6 +68,14 @@ namespace CodeSanitizer
             }
 
             var output = options.Output ?? DefaultSuffixedOutput(options.Input, "sanitized");
+
+            if (!ConfirmOverwriteIfExists(output))
+            {
+                Console.WriteLine("Operation canceled by the user.");
+                return 0;
+            }
+
+            CleanDestination(output);
             Directory.CreateDirectory(output);
             var map = new ReplacementMap();
 
@@ -103,7 +111,7 @@ namespace CodeSanitizer
                 }
                 else
                 {
-                    // Binaries and others: copied as it is (no sanitization).
+                    // Binaries or other files: copied as-is (not sanitized).
                     File.Copy(file, destPath, overwrite: true);
                 }
             }
@@ -112,8 +120,8 @@ namespace CodeSanitizer
             map.SaveTo(mapPath);
 
             Console.WriteLine($"Processed {processed} text/code file(s).");
-            Console.WriteLine($"Sanitized output in: {Path.GetFullPath(output)}");
-            Console.WriteLine($"Replacement map (DO NOT SHARE) in: {mapPath}");
+            Console.WriteLine($"Sanitized output at: {Path.GetFullPath(output)}");
+            Console.WriteLine($"Replacement map (do NOT share) at: {mapPath}");
             Console.WriteLine($"Total replacements: {map.Entries.Count}");
 
             return 0;
@@ -123,11 +131,11 @@ namespace CodeSanitizer
         {
             var options = ParseRestoreArgs(args);
             if (options is null)
-                return Fail("Missing arguments for 'restore'. You need --input, --map and optionally --output.");
+                return Fail("Missing arguments for 'restore'. You need --input, --map, and optionally --output.");
 
             if (!File.Exists(options.Map))
             {
-                Console.WriteLine($"File not found: {options.Map}");
+                Console.WriteLine($"Map file not found: {options.Map}");
                 return 1;
             }
 
@@ -145,6 +153,14 @@ namespace CodeSanitizer
             }
 
             var output = options.Output ?? DefaultSuffixedOutput(options.Input, "restored");
+
+            if (!ConfirmOverwriteIfExists(output))
+            {
+                Console.WriteLine("Operation canceled by the user.");
+                return 0;
+            }
+
+            CleanDestination(output);
 
             if (File.Exists(options.Input))
             {
@@ -167,10 +183,44 @@ namespace CodeSanitizer
                     restored++;
                 }
 
-                Console.WriteLine($"Restored {restored} file(s) in: {Path.GetFullPath(output)}");
+                Console.WriteLine($"Restored {restored} file(s) at: {Path.GetFullPath(output)}");
             }
 
             return 0;
+        }
+
+        /// <summary>
+        /// If the destination (file or folder) already exists, asks for confirmation
+        /// ONCE before continuing. Returns true if it's safe to proceed (it didn't
+        /// exist, or the user confirmed the overwrite), false if the user canceled.
+        /// </summary>
+        private static bool ConfirmOverwriteIfExists(string output)
+        {
+            var exists = File.Exists(output) || Directory.Exists(output);
+            if (!exists)
+                return true;
+
+            Console.Write($"Destination '{Path.GetFullPath(output)}' already exists. Overwrite? (y/n): ");
+            var answer = Console.ReadLine()?.Trim().ToLowerInvariant();
+            return answer is "y" or "yes" or "s" or "si" or "sí";
+        }
+
+        /// <summary>
+        /// Fully deletes the destination if it exists (file or folder, recursive),
+        /// so the output reflects exactly the current state of the input and doesn't
+        /// carry over orphaned files from a previous run (e.g. files an AI agent
+        /// deleted between one run and the next).
+        /// </summary>
+        private static void CleanDestination(string output)
+        {
+            if (File.Exists(output))
+            {
+                File.Delete(output);
+            }
+            else if (Directory.Exists(output))
+            {
+                Directory.Delete(output, recursive: true);
+            }
         }
 
         private static void RestoreSingleFile(string sourcePath, string destPath, Dictionary<string, string> placeholderToOriginal)
@@ -186,12 +236,12 @@ namespace CodeSanitizer
         }
 
         /// <summary>
-        /// Calculates the default output path by adding a suffix to the input name,
-        /// keeping it as a sibling (same parent directory) instead of nesting it
-        /// within a fixed folder. This avoids having it inside the project
-        /// (and thus no need to exclude it when compiling/executing).
-        ///   File:  ./MyFile.cs        -> ./MyFile_sanitized.cs
-        ///   Folder:  ./MyProject          -> ./MyProject_sanitized
+        /// Computes the default output path by appending a suffix to the input's name,
+        /// keeping it as a sibling (same parent directory) instead of nesting it inside
+        /// a fixed folder. This keeps it out of the project (so there's no need to
+        /// exclude it when building/running).
+        ///   File:   ./MyFile.cs   -> ./MyFile_sanitized.cs
+        ///   Folder: ./MyProject   -> ./MyProject_sanitized
         /// </summary>
         private static string DefaultSuffixedOutput(string input, string suffix)
         {
@@ -267,13 +317,13 @@ namespace CodeSanitizer
         {
             Console.WriteLine("Usage:");
             Console.WriteLine("  Sanitize:  dotnet run -- sanitize --input <file-or-folder> [--output <destination>]");
-            Console.WriteLine("              (without --output, use '<input>_sanitized' next to input)");
-            Console.WriteLine("  Restore:  dotnet run -- restore --input <file-or-folder> --map <_replacement-map.txt> [--output <destination>]");
-            Console.WriteLine("              (without --output, use '<input>_restored' next to input)");
+            Console.WriteLine("             (without --output, defaults to '<input>_sanitized' next to the input)");
+            Console.WriteLine("  Restore:   dotnet run -- restore --input <file-or-folder> --map <_replacement-map.txt> [--output <destination>]");
+            Console.WriteLine("             (without --output, defaults to '<input>_restored' next to the input)");
             Console.WriteLine();
             Console.WriteLine("Examples:");
-            Console.WriteLine("  dotnet run -- sanitize --input ./MiProject");
-            Console.WriteLine("  dotnet run -- restore --input ./result-ia.cs --map ./MiProject_sanitized/_replacement-map.txt");
+            Console.WriteLine("  dotnet run -- sanitize --input ./MyProject");
+            Console.WriteLine("  dotnet run -- restore --input ./ai-response.cs --map ./MyProject_sanitized/_replacement-map.txt");
         }
     }
 }
