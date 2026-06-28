@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Csharpsanitizer")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Release")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+3af570af0d515fd4e7c07adf0666d7604cdeddae")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+93f8953e945ed22d3217159f77e997b80bee3caf")]
 [assembly: System.Reflection.AssemblyProductAttribute("Csharpsanitizer")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Csharpsanitizer")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

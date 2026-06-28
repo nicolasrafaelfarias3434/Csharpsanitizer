@@ -28,3 +28,16 @@
 /obj/Debug/net8.0/Csharpsanitizer.assets.cache
 /obj/Debug/net8.0/Csharpsanitizer.csproj.FileListAbsolute.txt
 /obj/Debug/net8.0/Csharpsanitizer.sourcelink.json
+/bin/Release/net8.0
+/obj/Release/net8.0/ref
+/obj/Release/net8.0/refint
+/obj/Release/net8.0/apphost.exe
+/obj/Release/net8.0/Csharpsa.257CAE9C.Up2Date
+/obj/Release/net8.0/Csharpsanitizer.AssemblyInfo.cs
+/obj/Release/net8.0/Csharpsanitizer.AssemblyInfoInputs.cache
+/obj/Release/net8.0/Csharpsanitizer.assets.cache
+/obj/Release/net8.0/Csharpsanitizer.csproj.FileListAbsolute.txt
+/obj/Release/net8.0/Csharpsanitizer.dll
+/obj/Release/net8.0/Csharpsanitizer.GeneratedMSBuildEditorConfig.editorconfig
+/obj/Release/net8.0/Csharpsanitizer.pdb
+/obj/Release/net8.0/Csharpsanitizer.sourcelink.json
