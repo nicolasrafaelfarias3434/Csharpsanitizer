@@ -2,6 +2,7 @@
 This SW takes a project and remove sensitive information to use in an AI agent without compromise clients private information.
 
 Usage:
+
   Sanitize:  dotnet run -- sanitize --input '<file-or-folder>' [--output '<destination>']
     (without --output, use '<input>'_sanitized next to input)
 
