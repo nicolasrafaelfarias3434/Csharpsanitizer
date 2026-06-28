@@ -3,32 +3,32 @@ using System.Text.RegularExpressions;
 namespace Csharpsanitizer.Rules
 {
     /// <summary>
-    /// Lista de excepciones: valores que NUNCA se deben anonimizar, aunque matcheen
-    /// alguna regla de SanitizationRules (ej. URLs públicas conocidas, dominios propios
-    /// que sabés que no son sensibles, GUIDs de librerías de terceros, etc.).
-    /// Coincidencia exacta de texto (case-insensitive) o por patrón regex, a elección.
+    /// Exceptions List: values that should NEVER be sanitized, even if they match
+    /// any sanitization rule (e.g., known public URLs, internal domains
+    /// that you know are not sensitive, third-party library GUIDs, etc.).
+    /// Exact text match (case-insensitive) or regex pattern match, at your choice.
     /// </summary>
     public static class DesanitizationRules
     {
         /// <summary>
-        /// Términos exactos a excluir (case-insensitive). Ej: "https://cdn.unity3d.com",
-        /// "contacto@miempresa.com" si ese mail ya es público, etc.
+        /// The exact terms to exclude (case-insensitive). Ej: "https://cdn.unity3d.com",
+        /// "contact@micompany.com" if that email is already public, etc.
         /// </summary>
         public static readonly List<string> ExactExclusions = new()
         {
             // "https://cdn.unity3d.com",
-            // "noreply@miempresa.com",
+            // "noreply@micompany.com",
         };
 
         /// <summary>
-        /// Patrones regex a excluir. Si un valor matchea alguno de estos, no se anonimiza
-        /// aunque también matchee una regla de sanitización. Útil para excluir dominios
-        /// enteros o rangos conocidos como "no sensibles".
+        /// Regex patterns to exclude. If a value matches any of these, it will not be sanitized
+        /// even if it also matches a sanitization rule. Useful for excluding entire domains
+        /// or known non-sensitive ranges.
         /// </summary>
         public static readonly List<Regex> PatternExclusions = new()
         {
             // new Regex(@"^https://.*\.unity3d\.com/.*$", RegexOptions.IgnoreCase),
-            // new Regex(@".*@miempresa\.com$", RegexOptions.IgnoreCase),
+            // new Regex(@".*@micompany\.com$", RegexOptions.IgnoreCase),
         };
 
         public static bool IsExcluded(string value)

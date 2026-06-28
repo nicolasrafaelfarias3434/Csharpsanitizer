@@ -1,9 +1,9 @@
 namespace Csharpsanitizer.CodeSanitizer
 {
     /// <summary>
-    /// Mapa de reemplazo: guarda el valor original -> placeholder, y al revés,
-    /// para poder "desofuscar" si necesitás mapear nombres de vuelta.
-    /// Vive solo en memoria + se vuelca a un JSON LOCAL (nunca se envía a ningún lado).
+    /// Replacement map: stores the original value -> placeholder mapping, and vice versa,
+    /// to be able to "desanonymize" if needed to map names back.
+    /// Lives only in memory + is dumped to a LOCAL JSON file (never sent anywhere).
     /// </summary>
     public sealed class ReplacementMap
     {
@@ -33,8 +33,8 @@ namespace Csharpsanitizer.CodeSanitizer
         }
 
         /// <summary>
-        /// Carga un mapa previamente guardado con SaveTo, devolviendo el diccionario
-        /// inverso (placeholder -> valor original) listo para restaurar un texto.
+        /// Loads a previously saved map with SaveTo, returning the inverse dictionary
+        /// (placeholder -> original value) ready to restore a text.
         /// </summary>
         public static Dictionary<string, string> LoadPlaceholderToOriginal(string path)
         {

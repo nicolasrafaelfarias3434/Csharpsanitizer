@@ -6,10 +6,10 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 namespace Csharpsanitizer.CodeSanitizer
 {
     /// <summary>
-    /// Sanitiza archivos .cs usando el AST de Roslyn: reescribe literales de string
-    /// sospechosos sin tocar la estructura sintáctica del archivo (no rompe nada).
-    /// Después de esta pasada estructural, igual corre las reglas regex sobre el
-    /// resultado, para cubrir lo que quedó como texto plano.
+    /// Sanitizes .cs files using the Roslyn AST: rewrites suspicious string literals
+    /// without touching the syntactic structure of the file (doesn't break anything).
+    /// After this structural pass, it also applies regex rules to the
+    /// result, to cover what remained as plain text.
     /// </summary>
     public static class CSharpSanitizer
     {
@@ -21,8 +21,8 @@ namespace Csharpsanitizer.CodeSanitizer
             var rewriter = new SensitiveLiteralRewriter(map);
             var newRoot = rewriter.Visit(root);
 
-            // Segunda pasada: regex sobre el texto ya reescrito (cubre comentarios,
-            // strings que Roslyn no marcó como "obviamente sensibles" por patrón propio, etc.)
+            // Second pass: regex over the already rewritten text (covers comments,
+            // strings that Roslyn didn't mark as "obviously sensitive" by their own pattern, etc.)
             return SanitizationRules.ApplyRegexRules(newRoot.ToFullString(), map);
         }
 
@@ -39,8 +39,8 @@ namespace Csharpsanitizer.CodeSanitizer
 
                 var value = node.Token.ValueText;
 
-                // Heurística simple: si el literal "parece" sensible según las reglas,
-                // lo reemplazamos directo acá (mantiene el literal como string válido).
+                // Simple heuristic: if the literal "looks" sensitive according to the rules,
+                // we replace it right here (keeps the literal as a valid string).
                 foreach (var rule in SanitizationRules.Rules)
                 {
                     if (rule.Pattern.IsMatch(value))

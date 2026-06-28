@@ -41,3 +41,4 @@
 /obj/Release/net8.0/Csharpsanitizer.GeneratedMSBuildEditorConfig.editorconfig
 /obj/Release/net8.0/Csharpsanitizer.pdb
 /obj/Release/net8.0/Csharpsanitizer.sourcelink.json
+/obj/Debug/net8.0/apphost.exe
