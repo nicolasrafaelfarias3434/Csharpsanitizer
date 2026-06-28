@@ -1,3 +1,6 @@
+using Csharpsanitizer.CodeSanitizer;
+using Csharpsanitizer.Rules;
+
 namespace CodeSanitizer
 {
     /// <summary>
