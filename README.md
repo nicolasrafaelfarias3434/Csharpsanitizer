@@ -8,5 +8,5 @@ Usage:
               (without --output, use '<input>_restored' next to input)
 
 Examples:
-  dotnet run -- sanitize --input ./MiProject
-  dotnet run -- restore --input ./result-ia.cs --map ./MiProject_sanitized/_replacement-map.txt
+  dotnet run -- sanitize --input ./MyProject
+  dotnet run -- restore --input ./result-ia.cs --map ./MyProject_sanitized/_replacement-map.txt
