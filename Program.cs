@@ -3,7 +3,6 @@ using Csharpsanitizer.Rules;
 
 namespace CodeSanitizer
 {
-
     /// <summary>
     /// Usage:
     ///   Sanitize (hides sensitive values):
@@ -161,11 +160,16 @@ namespace CodeSanitizer
             }
 
             CleanDestination(output);
+            var foundPlaceholders = new HashSet<string>();
 
             if (File.Exists(options.Input))
             {
-                RestoreSingleFile(options.Input, output, placeholderToOriginal);
+                Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(output))!);
+                var found = RestoreSingleFile(options.Input, output, placeholderToOriginal);
+                foundPlaceholders.UnionWith(found);
                 Console.WriteLine($"Restored: {Path.GetFullPath(output)}");
+
+                WriteUnresolvedReport(Path.GetDirectoryName(Path.GetFullPath(output))!, placeholderToOriginal, foundPlaceholders);
             }
             else
             {
@@ -179,11 +183,14 @@ namespace CodeSanitizer
                     var relative = Path.GetRelativePath(inputRoot, file);
                     var destPath = Path.Combine(output, relative);
                     Directory.CreateDirectory(Path.GetDirectoryName(destPath)!);
-                    RestoreSingleFile(file, destPath, placeholderToOriginal);
+                    var found = RestoreSingleFile(file, destPath, placeholderToOriginal);
+                    foundPlaceholders.UnionWith(found);
                     restored++;
                 }
 
                 Console.WriteLine($"Restored {restored} file(s) at: {Path.GetFullPath(output)}");
+
+                WriteUnresolvedReport(output, placeholderToOriginal, foundPlaceholders);
             }
 
             return 0;
@@ -223,16 +230,53 @@ namespace CodeSanitizer
             }
         }
 
-        private static void RestoreSingleFile(string sourcePath, string destPath, Dictionary<string, string> placeholderToOriginal)
+        /// <summary>
+        /// Writes a "_unresolved-replacements.txt" report next to the restore output,
+        /// listing every placeholder from the map that was NOT found in any processed
+        /// file — so you know which ones, for whatever reason, couldn't be reverted
+        /// to their original value (e.g. the AI reworded or removed that code).
+        /// </summary>
+        private static void WriteUnresolvedReport(string outputDir, Dictionary<string, string> placeholderToOriginal, HashSet<string> foundPlaceholders)
+        {
+            var unresolved = placeholderToOriginal
+                .Where(kv => !foundPlaceholders.Contains(kv.Key))
+                .ToList();
+
+            var reportPath = Path.Combine(outputDir, "_unresolved-replacements.txt");
+
+            if (unresolved.Count == 0)
+            {
+                // No leftovers from a previous run should linger if this run resolved everything.
+                if (File.Exists(reportPath))
+                    File.Delete(reportPath);
+
+                Console.WriteLine("All placeholders from the map were resolved.");
+                return;
+            }
+
+            var lines = unresolved.Select(kv => $"{kv.Key} => {kv.Value}");
+            File.WriteAllLines(reportPath, lines);
+
+            Console.WriteLine($"{unresolved.Count} placeholder(s) were NOT found in the restored output.");
+            Console.WriteLine($"Unresolved replacements report at: {reportPath}");
+        }
+
+        private static HashSet<string> RestoreSingleFile(string sourcePath, string destPath, Dictionary<string, string> placeholderToOriginal)
         {
             var content = File.ReadAllText(sourcePath);
+            var found = new HashSet<string>();
 
             foreach (var (placeholder, original) in placeholderToOriginal)
             {
-                content = content.Replace(placeholder, original);
+                if (content.Contains(placeholder))
+                {
+                    found.Add(placeholder);
+                    content = content.Replace(placeholder, original);
+                }
             }
 
             File.WriteAllText(destPath, content);
+            return found;
         }
 
         /// <summary>
